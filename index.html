@@ -317,30 +317,52 @@ function fileLoaded(tipo, input) {
   document.getElementById('fn-' + tipo).textContent = '✔ ' + input.files[0].name;
   document.getElementById('error-box').style.display = 'none';
 
-  if (tipo === 'momentos') {
-    // Leer jefes disponibles y llenar el dropdown
-    readTxtFile(gFiles.momentos).then(rows => {
-      const jefes = [...new Set(
-        rows.map(r => (r['NOMBRE JEFE'] || '').trim().toUpperCase()).filter(Boolean)
-      )].sort();
-
-      const sel = document.getElementById('select-supervisor');
-      sel.innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
-      jefes.forEach(j => {
-        const op = document.createElement('option');
-        op.value = j;
-        op.textContent = j + ' (' + rows.filter(r => (r['NOMBRE JEFE']||'').toUpperCase().trim()===j).length + ' visitas)';
-        sel.appendChild(op);
-      });
-
-      document.getElementById('jefe-row').style.display = 'block';
-      document.getElementById('btn-procesar').disabled = true; // requiere seleccionar jefe
-    }).catch(() => {
-      document.getElementById('jefe-row').style.display = 'none';
-    });
+  // Al cargar el Excel SGI → leer NOMBRE JEFE y llenar el dropdown
+  if (tipo === 'sgi') {
+    cargarJefesDesdeExcel(gFiles.sgi);
   }
 
   revisarHabilitarBoton();
+}
+
+function cargarJefesDesdeExcel(file) {
+  const sel = document.getElementById('select-supervisor');
+  sel.innerHTML = '<option value="">⏳ Leyendo jefes del Excel…</option>';
+  document.getElementById('jefe-row').style.display = 'block';
+
+  readXlsxFile(file).then(rows => {
+    // Buscar columna NOMBRE JEFE (puede tener variantes)
+    const primeraFila = rows[0] || {};
+    const colJefe = Object.keys(primeraFila).find(k =>
+      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEFE') ||
+      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEF')
+    );
+
+    if (!colJefe) {
+      sel.innerHTML = '<option value="">⚠ No se encontró columna NOMBRE JEFE en el Excel</option>';
+      return;
+    }
+
+    const conteo = {};
+    rows.forEach(r => {
+      const j = (r[colJefe] || '').toString().trim().toUpperCase();
+      if (j) conteo[j] = (conteo[j] || 0) + 1;
+    });
+
+    const jefes = Object.keys(conteo).sort();
+    sel.innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
+    jefes.forEach(j => {
+      const op = document.createElement('option');
+      op.value = j;
+      op.textContent = j + '  (' + conteo[j] + ' registros)';
+      sel.appendChild(op);
+    });
+
+    document.getElementById('jefe-row').style.display = 'block';
+    revisarHabilitarBoton();
+  }).catch(err => {
+    sel.innerHTML = '<option value="">❌ Error leyendo Excel: ' + err.message + '</option>';
+  });
 }
 
 function onJefeChange() {
@@ -348,8 +370,8 @@ function onJefeChange() {
 }
 
 function revisarHabilitarBoton() {
-  const jefeOk = !gFiles.momentos || document.getElementById('select-supervisor').value !== '';
-  document.getElementById('btn-procesar').disabled = !(gFiles.momentos && gFiles.sgi && jefeOk);
+  const jefeSeleccionado = document.getElementById('select-supervisor').value !== '';
+  document.getElementById('btn-procesar').disabled = !(gFiles.momentos && gFiles.sgi && jefeSeleccionado);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -503,17 +525,32 @@ async function procesar() {
     const sgiRows = await readXlsxFile(gFiles.sgi);
     if (!sgiRows.length) throw new Error('El archivo SGI está vacío o no tiene el formato esperado.');
 
-    setMsg(`${sgiRows.length} registros SGI leídos. Filtrando actividades…`);
+    setMsg(`${sgiRows.length} registros SGI leídos. Filtrando por jefe y actividad…`);
     await delay(200);
 
+    // Detectar columna NOMBRE JEFE en SGI
+    const primeraFila = sgiRows[0] || {};
+    const colJefe = Object.keys(primeraFila).find(k =>
+      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEFE') ||
+      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEF')
+    );
+
+    // Filtrar por jefe seleccionado (si la columna existe en SGI)
+    let sgiDelJefe = sgiRows;
+    if (supervisor && colJefe) {
+      sgiDelJefe = sgiRows.filter(r =>
+        (r[colJefe] || '').toString().trim().toUpperCase() === supervisor
+      );
+    }
+
     // Filtrar INGRESO Y SALIDA DE PDV
-    const sgiPDV = sgiRows.filter(r => {
+    const sgiPDV = sgiDelJefe.filter(r => {
       const sub = (r['NOMBRE SUBACTIVIDAD'] || r['SUBACTIVIDAD'] || '').toUpperCase();
       return sub.includes('INGRESO') && sub.includes('SALIDA');
     });
 
     if (!sgiPDV.length) {
-      throw new Error('No se encontraron registros "INGRESO Y SALIDA DE PDV" en el archivo SGI. Verifica que el archivo sea el correcto.');
+      throw new Error('No se encontraron registros "INGRESO Y SALIDA DE PDV" para este jefe en el SGI. Verifica que el archivo y el jefe seleccionado sean correctos.');
     }
 
     setMsg(`${sgiPDV.length} registros de entrada/salida encontrados. Calculando duraciones…`);
