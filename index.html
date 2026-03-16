@@ -191,10 +191,15 @@
         </div>
       </div>
 
-      <div class="supervisor-row">
-        <label for="input-supervisor">👤 Filtrar por jefe/supervisor (dejar en blanco = ver todos)</label>
-        <input type="text" id="input-supervisor" class="search-input" style="width:100%;"
-          placeholder="Ej: LEIDY VIVIANA RODRIGUEZ PEDROZA"/>
+      <!-- Selector de jefe: aparece solo cuando MOMENTOS está cargado -->
+      <div class="supervisor-row" id="jefe-row" style="display:none">
+        <label for="select-supervisor">👤 Selecciona el jefe / supervisor <span style="color:var(--rojo)">*</span></label>
+        <select id="select-supervisor" style="width:100%;margin-top:4px;padding:10px 12px;font-size:.88rem;border-radius:8px;border:2px solid var(--azul-med);background:#fff;color:var(--texto);outline:none;" onchange="onJefeChange()">
+          <option value="">— Elige un jefe para continuar —</option>
+        </select>
+        <div style="font-size:.75rem;color:var(--suave);margin-top:4px;">
+          💡 Estos jefes se leyeron directamente de tu archivo MOMENTOS
+        </div>
       </div>
 
       <div class="error-box" id="error-box">⚠ <span id="error-msg"></span></div>
@@ -310,8 +315,41 @@ function fileLoaded(tipo, input) {
   gFiles[tipo] = input.files[0];
   document.getElementById('box-' + tipo).classList.add('loaded');
   document.getElementById('fn-' + tipo).textContent = '✔ ' + input.files[0].name;
-  document.getElementById('btn-procesar').disabled = !(gFiles.momentos && gFiles.sgi);
   document.getElementById('error-box').style.display = 'none';
+
+  if (tipo === 'momentos') {
+    // Leer jefes disponibles y llenar el dropdown
+    readTxtFile(gFiles.momentos).then(rows => {
+      const jefes = [...new Set(
+        rows.map(r => (r['NOMBRE JEFE'] || '').trim().toUpperCase()).filter(Boolean)
+      )].sort();
+
+      const sel = document.getElementById('select-supervisor');
+      sel.innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
+      jefes.forEach(j => {
+        const op = document.createElement('option');
+        op.value = j;
+        op.textContent = j + ' (' + rows.filter(r => (r['NOMBRE JEFE']||'').toUpperCase().trim()===j).length + ' visitas)';
+        sel.appendChild(op);
+      });
+
+      document.getElementById('jefe-row').style.display = 'block';
+      document.getElementById('btn-procesar').disabled = true; // requiere seleccionar jefe
+    }).catch(() => {
+      document.getElementById('jefe-row').style.display = 'none';
+    });
+  }
+
+  revisarHabilitarBoton();
+}
+
+function onJefeChange() {
+  revisarHabilitarBoton();
+}
+
+function revisarHabilitarBoton() {
+  const jefeOk = !gFiles.momentos || document.getElementById('select-supervisor').value !== '';
+  document.getElementById('btn-procesar').disabled = !(gFiles.momentos && gFiles.sgi && jefeOk);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -449,19 +487,13 @@ async function procesar() {
     await delay(200);
 
     // ── 2. Filtrar por supervisor ─────────────────────────────────────────────
-    const supervisor = (document.getElementById('input-supervisor').value || '').trim().toUpperCase();
+    const supervisor = (document.getElementById('select-supervisor').value || '').trim().toUpperCase();
     let filtradas = momentosRows;
     if (supervisor) {
-      filtradas = momentosRows.filter(r => {
-        const jefe = (r['NOMBRE JEFE'] || '').toUpperCase().trim();
-        return jefe === supervisor || jefe.includes(supervisor);
-      });
-      if (!filtradas.length) {
-        // Mostrar supervisores disponibles para ayudar
-        const jefesList = [...new Set(momentosRows.map(r => (r['NOMBRE JEFE'] || '').toUpperCase().trim()).filter(Boolean))];
-        const sample = jefesList.slice(0,5).join('\n  • ');
-        throw new Error(`No se encontraron visitas para "${supervisor}".\n\nSupervisores en el archivo:\n  • ${sample}${jefesList.length > 5 ? '\n  • ...' : ''}`);
-      }
+      filtradas = momentosRows.filter(r =>
+        (r['NOMBRE JEFE'] || '').toUpperCase().trim() === supervisor
+      );
+      if (!filtradas.length) throw new Error(`No se encontraron visitas para "${supervisor}".`);
     }
 
     setMsg(`${filtradas.length} visitas programadas${supervisor ? ' para ' + supervisor : ''}. Leyendo SGI…`);
@@ -696,6 +728,8 @@ function reiniciar() {
   });
   document.getElementById('btn-procesar').disabled = true;
   document.getElementById('error-box').style.display = 'none';
+  document.getElementById('jefe-row').style.display = 'none';
+  document.getElementById('select-supervisor').innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
   hide('sec-reporte'); show('sec-upload'); paso(1);
 }
 
