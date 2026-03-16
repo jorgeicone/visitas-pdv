@@ -7,19 +7,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --azul:     #1B3A6B;
-    --azul-med: #2D5FA6;
-    --azul-clr: #EEF4FF;
-    --verde:    #1A7F5A;
-    --verde-bg: #D4EDDA;
-    --naranja:  #92600A;
+    --azul:      #1B3A6B;
+    --azul-med:  #2D5FA6;
+    --azul-clr:  #EEF4FF;
+    --verde:     #1A7F5A;
+    --verde-bg:  #D4EDDA;
+    --naranja:   #92600A;
     --naranja-bg:#FFF3CD;
-    --rojo:     #9C0006;
-    --rojo-bg:  #FFC7CE;
-    --gris:     #F7F9FC;
-    --borde:    #D1DCF0;
-    --texto:    #1A1A2E;
-    --suave:    #6B7C99;
+    --rojo:      #9C0006;
+    --rojo-bg:   #FFC7CE;
+    --gris:      #F7F9FC;
+    --borde:     #D1DCF0;
+    --texto:     #1A1A2E;
+    --suave:     #6B7C99;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gris); color: var(--texto); min-height: 100vh; }
@@ -31,7 +31,7 @@
     height: 60px; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     position: sticky; top: 0; z-index: 100;
   }
-  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; font-weight: 700; letter-spacing: .5px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; font-weight: 700; }
   .logo-icon { width: 34px; height: 34px; background: rgba(255,255,255,0.15); border-radius: 8px;
     display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
   .header-right { font-size: .8rem; opacity: .75; }
@@ -59,23 +59,29 @@
 
   .upload-box { border: 2px dashed var(--borde); border-radius: 10px; padding: 20px 14px;
     text-align: center; cursor: pointer; transition: all .2s; position: relative; }
-  .upload-box:hover, .upload-box.drag { border-color: var(--azul-med); background: var(--azul-clr); }
+  .upload-box:hover { border-color: var(--azul-med); background: var(--azul-clr); }
   .upload-box.loaded { border-color: var(--verde); background: var(--verde-bg); border-style: solid; }
   .upload-icon { font-size: 2rem; margin-bottom: 8px; }
-  .upload-label { font-size: .82rem; font-weight: 600; color: var(--azul); margin-bottom: 4px; }
-  .upload-sub   { font-size: .74rem; color: var(--suave); }
+  .upload-label { font-size: .82rem; font-weight: 700; color: var(--azul); margin-bottom: 4px; }
+  .upload-sub   { font-size: .73rem; color: var(--suave); }
   .upload-filename { font-size: .78rem; color: var(--verde); font-weight: 600; margin-top: 6px; min-height: 18px; }
   .upload-box input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width:100%; height:100%; }
 
-  .supervisor-row { margin-top: 14px; }
-  .supervisor-row label { font-size: .82rem; font-weight: 600; color: var(--azul); display: block; margin-bottom: 5px; }
+  .jefe-row { margin-top: 16px; display: none; }
+  .jefe-row label { font-size: .85rem; font-weight: 700; color: var(--azul); display: block; margin-bottom: 6px; }
+  .jefe-select {
+    width: 100%; padding: 11px 14px; font-size: .9rem;
+    border-radius: 8px; border: 2px solid var(--azul-med);
+    background: #fff; color: var(--texto); outline: none; cursor: pointer;
+  }
+  .jefe-hint { font-size: .74rem; color: var(--suave); margin-top: 5px; }
 
   .btn-primary {
     background: linear-gradient(135deg, var(--azul) 0%, var(--azul-med) 100%);
-    color: #fff; border: none; border-radius: 8px; padding: 12px 28px;
-    font-size: .92rem; font-weight: 600; cursor: pointer; width: 100%;
-    margin-top: 16px; transition: opacity .2s; display: flex; align-items: center;
-    justify-content: center; gap: 8px;
+    color: #fff; border: none; border-radius: 8px; padding: 13px 28px;
+    font-size: .95rem; font-weight: 600; cursor: pointer; width: 100%;
+    margin-top: 18px; transition: opacity .2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .btn-primary:hover { opacity: .88; }
   .btn-primary:disabled { background: #B0BFD6; cursor: not-allowed; }
@@ -89,23 +95,21 @@
   .btn-green:hover { opacity: .88; }
 
   .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-  select, .search-input {
+  select.filter-sel, .search-input {
     border: 1px solid var(--borde); border-radius: 7px; padding: 8px 12px;
     font-size: .83rem; background: #fff; color: var(--texto); outline: none;
-    transition: border-color .2s;
   }
-  select:focus, .search-input:focus { border-color: var(--azul-med); }
   .search-input { flex: 1; min-width: 160px; }
 
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
   @media(max-width:640px){ .kpi-grid { grid-template-columns: repeat(2,1fr); } }
   .kpi { border-radius: 10px; padding: 14px 12px; text-align: center; }
-  .kpi-num  { font-size: 1.7rem; font-weight: 800; line-height: 1; }
-  .kpi-lbl  { font-size: .72rem; font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
-  .kpi.total   { background: var(--azul-clr);   color: var(--azul); }
-  .kpi.ok      { background: var(--verde-bg);   color: var(--verde); }
-  .kpi.warning { background: var(--naranja-bg); color: var(--naranja); }
-  .kpi.fail    { background: var(--rojo-bg);    color: var(--rojo); }
+  .kpi-num { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+  .kpi-lbl { font-size: .72rem; font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .kpi.total   { background: var(--azul-clr);    color: var(--azul); }
+  .kpi.ok      { background: var(--verde-bg);    color: var(--verde); }
+  .kpi.warning { background: var(--naranja-bg);  color: var(--naranja); }
+  .kpi.fail    { background: var(--rojo-bg);     color: var(--rojo); }
 
   .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--borde); }
   table { width: 100%; border-collapse: collapse; font-size: .82rem; }
@@ -117,7 +121,7 @@
   .asesor-name { font-weight: 600; }
   .pdv-name    { color: var(--suave); font-size: .78rem; }
 
-  .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px;
+  .badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 20px;
     padding: 3px 10px; font-size: .74rem; font-weight: 700; white-space: nowrap; }
   .badge.ok      { background: var(--verde-bg);   color: var(--verde); }
   .badge.warning { background: var(--naranja-bg); color: var(--naranja); }
@@ -128,7 +132,7 @@
   .diff-neg { color: var(--rojo);   font-weight: 700; }
   .diff-na  { color: var(--suave); }
 
-  .prog-bar-bg { background: #E2E8F0; border-radius: 99px; height: 7px; width: 80px; display: inline-block; vertical-align: middle; }
+  .prog-bar-bg   { background: #E2E8F0; border-radius: 99px; height: 7px; width: 80px; display: inline-block; vertical-align: middle; }
   .prog-bar-fill { height: 100%; border-radius: 99px; }
 
   .loader-wrap { text-align: center; padding: 40px; }
@@ -146,63 +150,63 @@
     font-size: .78rem; font-weight: 600; color: var(--suave); cursor: pointer; transition: all .2s; }
   .nav-tab.active { background: var(--azul); color: #fff; }
 
-  .info-box { padding: 10px 14px; background: var(--azul-clr); border-radius: 8px; font-size: .8rem; color: var(--azul); margin-bottom: 10px; line-height: 1.5; }
-  .error-box { padding: 12px 14px; background: var(--rojo-bg); border-radius: 8px; font-size: .83rem; color: var(--rojo); margin-top: 12px; display: none; font-weight: 600; }
+  .error-box { padding: 12px 14px; background: var(--rojo-bg); border-radius: 8px;
+    font-size: .83rem; color: var(--rojo); margin-top: 14px; display: none; font-weight: 600; }
+  .info-box  { padding: 10px 14px; background: var(--azul-clr); border-radius: 8px;
+    font-size: .82rem; color: var(--azul); margin-bottom: 14px; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-icon">📍</div>
-    VisitasPDV
-  </div>
-  <div class="header-right">Control de Equipos · v2.0</div>
+  <div class="logo"><div class="logo-icon">📍</div>VisitasPDV</div>
+  <div class="header-right">Control de Equipos · v3.0</div>
 </header>
 
 <main>
-
   <div class="steps" id="steps">
     <div class="step active" id="s1"><div class="step-num">1</div>Cargar archivos</div>
     <div class="step" id="s2"><div class="step-num">2</div>Procesar</div>
     <div class="step" id="s3"><div class="step-num">3</div>Ver reporte</div>
   </div>
 
-  <!-- ─── SECCIÓN 1: CARGA ─── -->
+  <!-- ── CARGA ── -->
   <div class="section visible" id="sec-upload">
     <div class="card">
       <div class="card-title">📂 Cargar archivos del día</div>
 
       <div class="upload-grid">
+
+        <!-- 1. SGI PRIMERO -->
+        <div class="upload-box" id="box-sgi">
+          <input type="file" id="file-sgi" accept=".csv,.xlsx,.xls,.txt" onchange="fileLoaded('sgi', this)"/>
+          <div class="upload-icon">📊</div>
+          <div class="upload-label">① Reporte SGI</div>
+          <div class="upload-sub">Lo programado · CSV o Excel</div>
+          <div class="upload-filename" id="fn-sgi"></div>
+        </div>
+
+        <!-- 2. MOMENTOS SEGUNDO -->
         <div class="upload-box" id="box-momentos">
-          <input type="file" id="file-momentos" accept=".txt,.csv" onchange="fileLoaded('momentos', this)"/>
+          <input type="file" id="file-momentos" accept=".xlsx,.xls,.csv,.txt" onchange="fileLoaded('momentos', this)"/>
           <div class="upload-icon">📅</div>
-          <div class="upload-label">MOMENTOS (Ejecutado en el día)</div>
-          <div class="upload-sub">Archivo .txt con las visitas ejecutadas en el día</div>
+          <div class="upload-label">② MOMENTOS</div>
+          <div class="upload-sub">Ejecutado en el día · Excel</div>
           <div class="upload-filename" id="fn-momentos"></div>
         </div>
 
-        <div class="upload-box" id="box-sgi">
-          <input type="file" id="file-sgi" accept=".xlsx,.xls" onchange="fileLoaded('sgi', this)"/>
-          <div class="upload-icon">📊</div>
-          <div class="upload-label">Reporte SGI (Lo Programado)</div>
-          <div class="upload-sub">Archivo .xlsx con las visitas programadas en sistema</div>
-          <div class="upload-filename" id="fn-sgi"></div>
-        </div>
       </div>
 
-      <!-- Selector de jefe: aparece solo cuando MOMENTOS está cargado -->
-      <div class="supervisor-row" id="jefe-row" style="display:none">
-        <label for="select-supervisor">👤 Selecciona el jefe / supervisor <span style="color:var(--rojo)">*</span></label>
-        <select id="select-supervisor" style="width:100%;margin-top:4px;padding:10px 12px;font-size:.88rem;border-radius:8px;border:2px solid var(--azul-med);background:#fff;color:var(--texto);outline:none;" onchange="onJefeChange()">
+      <!-- Selector de jefe (aparece al cargar SGI) -->
+      <div class="jefe-row" id="jefe-row">
+        <label for="sel-jefe">👤 Selecciona el jefe / supervisor *</label>
+        <select id="sel-jefe" class="jefe-select" onchange="onJefeChange()">
           <option value="">— Elige un jefe para continuar —</option>
         </select>
-        <div style="font-size:.75rem;color:var(--suave);margin-top:4px;">
-          💡 Lista leída automáticamente del archivo MOMENTOS
-        </div>
+        <div class="jefe-hint">💡 Lista leída automáticamente del Reporte SGI</div>
       </div>
 
-      <div class="error-box" id="error-box">⚠ <span id="error-msg"></span></div>
+      <div class="error-box" id="error-box"><span id="error-msg"></span></div>
 
       <button class="btn-primary" id="btn-procesar" onclick="procesar()" disabled>
         ⚙️ Generar Reporte
@@ -210,54 +214,51 @@
     </div>
   </div>
 
-  <!-- ─── SECCIÓN 2: PROCESANDO ─── -->
+  <!-- ── PROCESANDO ── -->
   <div class="section" id="sec-loading">
     <div class="card">
       <div class="loader-wrap">
         <div class="spinner"></div>
-        <div style="font-weight:600; color:var(--azul); font-size:1rem;">Procesando archivos…</div>
-        <div id="loading-msg" style="color:var(--suave); font-size:.83rem; margin-top:6px;">Leyendo datos…</div>
+        <div style="font-weight:600;color:var(--azul);font-size:1rem;">Procesando…</div>
+        <div id="loading-msg" style="color:var(--suave);font-size:.83rem;margin-top:6px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- ─── SECCIÓN 3: REPORTE ─── -->
+  <!-- ── REPORTE ── -->
   <div class="section" id="sec-reporte">
 
-    <div class="info-box" id="reporte-info">Reporte generado</div>
+    <div class="info-box" id="reporte-info"></div>
 
     <div class="kpi-grid">
-      <div class="kpi total"><div class="kpi-num" id="kpi-total">0</div><div class="kpi-lbl">Programadas</div></div>
-      <div class="kpi ok"><div class="kpi-num" id="kpi-ok">0</div><div class="kpi-lbl">✔ Cumplieron</div></div>
-      <div class="kpi warning"><div class="kpi-num" id="kpi-warn">0</div><div class="kpi-lbl">⚠ T. Insuficiente</div></div>
-      <div class="kpi fail"><div class="kpi-num" id="kpi-fail">0</div><div class="kpi-lbl">✘ No Reportó</div></div>
+      <div class="kpi total">  <div class="kpi-num" id="kpi-total">0</div><div class="kpi-lbl">Programadas</div></div>
+      <div class="kpi ok">     <div class="kpi-num" id="kpi-ok">0</div>   <div class="kpi-lbl">✔ Cumplieron</div></div>
+      <div class="kpi warning"><div class="kpi-num" id="kpi-warn">0</div> <div class="kpi-lbl">⚠ T. Insuficiente</div></div>
+      <div class="kpi fail">   <div class="kpi-num" id="kpi-fail">0</div> <div class="kpi-lbl">✘ No Reportó</div></div>
     </div>
 
     <div class="nav-tabs">
       <div class="nav-tab active" onclick="switchTab('resumen')">👥 Por Asesor</div>
-      <div class="nav-tab" onclick="switchTab('detalle')">📋 Detalle PDV</div>
+      <div class="nav-tab"        onclick="switchTab('detalle')">📋 Detalle PDV</div>
     </div>
 
-    <!-- TAB RESUMEN -->
     <div id="tab-resumen">
       <div class="card">
         <div class="card-title">👥 Resumen por Asesor</div>
         <div class="filter-row">
-          <input class="search-input" type="text" placeholder="🔍 Buscar asesor…"
-            oninput="filtrarTabla('tbl-resumen', this.value)"/>
-          <select onchange="filtrarPorEstado('tbl-resumen', this.value)">
+          <input class="search-input" type="text" placeholder="🔍 Buscar asesor…" oninput="filtrar('tbl-resumen', this.value)"/>
+          <select class="filter-sel" onchange="filtrarEstado('tbl-resumen', this.value)">
             <option value="">Todos los estados</option>
             <option value="ok">✔ Cumplió</option>
             <option value="warning">⚠ T. Insuficiente</option>
             <option value="fail">✘ No Reportó</option>
           </select>
-          <button class="btn-green" onclick="descargar()">⬇ Descargar Excel</button>
+          <button class="btn-green" onclick="descargar()">⬇ Excel</button>
         </div>
         <div class="table-wrap">
           <table id="tbl-resumen">
             <thead><tr>
-              <th>Asesor</th><th>PDV Prog.</th><th>Cumplió</th>
-              <th>T. Insuf.</th><th>No Reportó</th><th>Cumplimiento</th><th>Estado</th>
+              <th>Asesor</th><th>Prog.</th><th>✔</th><th>⚠</th><th>✘</th><th>Cumplimiento</th><th>Estado</th>
             </tr></thead>
             <tbody id="tbody-resumen"></tbody>
           </table>
@@ -265,14 +266,12 @@
       </div>
     </div>
 
-    <!-- TAB DETALLE -->
     <div id="tab-detalle" style="display:none">
       <div class="card">
         <div class="card-title">📋 Detalle por Visita</div>
         <div class="filter-row">
-          <input class="search-input" type="text" placeholder="🔍 Buscar asesor o PDV…"
-            oninput="filtrarTabla('tbl-detalle', this.value)"/>
-          <select onchange="filtrarPorEstado('tbl-detalle', this.value)">
+          <input class="search-input" type="text" placeholder="🔍 Buscar asesor o PDV…" oninput="filtrar('tbl-detalle', this.value)"/>
+          <select class="filter-sel" onchange="filtrarEstado('tbl-detalle', this.value)">
             <option value="">Todos los estados</option>
             <option value="ok">✔ Cumplió</option>
             <option value="warning">⚠ T. Insuficiente</option>
@@ -282,8 +281,8 @@
         <div class="table-wrap">
           <table id="tbl-detalle">
             <thead><tr>
-              <th>Asesor</th><th>Punto de Venta</th><th>T. Prog.</th>
-              <th>Inicio Real</th><th>Fin Real</th><th>T. Real</th><th>Diferencia</th><th>Estado</th>
+              <th>Asesor</th><th>Punto de Venta</th><th>T.Prog.</th>
+              <th>Inicio Real</th><th>Fin Real</th><th>T.Real</th><th>Dif.</th><th>Estado</th>
             </tr></thead>
             <tbody id="tbody-detalle"></tbody>
           </table>
@@ -291,20 +290,17 @@
       </div>
     </div>
 
-    <div style="text-align:center; margin-top:8px;">
-      <button class="btn-primary" style="max-width:320px;" onclick="reiniciar()">
-        ↩ Cargar nuevos archivos
-      </button>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn-primary" style="max-width:320px;" onclick="reiniciar()">↩ Nuevo reporte</button>
     </div>
-
   </div>
 </main>
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// ESTADO GLOBAL
+// ESTADO
 // ══════════════════════════════════════════════════════════════════════════════
-let gFiles = { momentos: null, sgi: null };
+let gFiles  = { sgi: null, momentos: null };
 let gResult = null;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -314,192 +310,152 @@ function fileLoaded(tipo, input) {
   if (!input.files.length) return;
   gFiles[tipo] = input.files[0];
   document.getElementById('box-' + tipo).classList.add('loaded');
-  document.getElementById('fn-' + tipo).textContent = '✔ ' + input.files[0].name;
-  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('fn-'  + tipo).textContent = '✔ ' + input.files[0].name;
+  ocultarError();
 
-  // Al cargar SGI → leer NOMBRE JEFE del Excel y llenar el dropdown
-  if (tipo === 'sgi') {
-    cargarJefesDesdeExcel(gFiles.sgi);
-  }
-
-  revisarHabilitarBoton();
+  if (tipo === 'sgi') cargarJefes(gFiles.sgi);
+  revisarBoton();
 }
 
-function cargarJefesDesdeExcel(file) {
-  const sel = document.getElementById('select-supervisor');
-  sel.innerHTML = '<option value="">⏳ Leyendo jefes del Excel…</option>';
+// ── Cargar lista de jefes desde el SGI ───────────────────────────────────────
+function cargarJefes(file) {
+  const sel = document.getElementById('sel-jefe');
+  sel.innerHTML = '<option value="">⏳ Leyendo jefes…</option>';
   document.getElementById('jefe-row').style.display = 'block';
   document.getElementById('btn-procesar').disabled = true;
 
-  readXlsxFile(file).then(rows => {
-    if (!rows.length) {
-      sel.innerHTML = '<option value="">⚠ El archivo SGI está vacío</option>';
+  leerArchivo(file).then(rows => {
+    const col = detectarColumna(rows, 'NOMBRE JEFE');
+    if (!col) {
+      sel.innerHTML = '<option value="">⚠ No se encontró columna NOMBRE JEFE</option>';
       return;
     }
-
-    // Buscar columna NOMBRE JEFE (exacta o parcial)
-    const primeraFila = rows[0];
-    const colJefe = Object.keys(primeraFila).find(k =>
-      k.trim().toUpperCase() === 'NOMBRE JEFE' ||
-      k.trim().toUpperCase() === 'NOMBRE JEFE INMEDIATO' ||
-      k.trim().toUpperCase().includes('NOMBRE') && k.trim().toUpperCase().includes('JEFE')
-    );
-
-    if (!colJefe) {
-      sel.innerHTML = '<option value="">⚠ No se encontró columna NOMBRE JEFE en el SGI — columnas: ' +
-        Object.keys(primeraFila).join(', ').substring(0,120) + '</option>';
-      return;
-    }
-
-    // Contar visitas por jefe
     const conteo = {};
     rows.forEach(r => {
-      const j = (r[colJefe] || '').toString().trim().toUpperCase();
+      const j = norm(r[col]);
       if (j) conteo[j] = (conteo[j] || 0) + 1;
     });
-
     const jefes = Object.keys(conteo).sort();
-    if (!jefes.length) {
-      sel.innerHTML = '<option value="">⚠ La columna NOMBRE JEFE está vacía</option>';
-      return;
-    }
-
     sel.innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
     jefes.forEach(j => {
-      const op = document.createElement('option');
-      op.value = j;
-      op.textContent = j + '  (' + conteo[j] + ' registros)';
-      sel.appendChild(op);
+      const o = document.createElement('option');
+      o.value = j;
+      o.textContent = j + '  (' + conteo[j] + ' visitas)';
+      sel.appendChild(o);
     });
-
-    // Guardar nombre de columna para usarla al procesar
-    gFiles.colJefeSGI = colJefe;
-    document.getElementById('jefe-row').style.display = 'block';
-    revisarHabilitarBoton();
-
-  }).catch(err => {
-    sel.innerHTML = '<option value="">❌ Error: ' + err.message + '</option>';
+    revisarBoton();
+  }).catch(e => {
+    sel.innerHTML = '<option value="">❌ Error: ' + e.message + '</option>';
   });
 }
 
-function onJefeChange() {
-  revisarHabilitarBoton();
-}
+function onJefeChange() { revisarBoton(); }
 
-function revisarHabilitarBoton() {
-  const jefeSeleccionado = document.getElementById('select-supervisor').value !== '';
-  document.getElementById('btn-procesar').disabled = !(gFiles.momentos && gFiles.sgi && jefeSeleccionado);
+function revisarBoton() {
+  const ok = gFiles.sgi && gFiles.momentos && document.getElementById('sel-jefe').value !== '';
+  document.getElementById('btn-procesar').disabled = !ok;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// LEER ARCHIVO .TXT (UTF-16 o UTF-8)
+// LEER ARCHIVOS (CSV con ; o XLSX/XLS)
 // ══════════════════════════════════════════════════════════════════════════════
-function readTxtFile(file) {
+function leerArchivo(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv' || ext === 'txt') return leerCSV(file);
+  return leerXLSX(file);
+}
+
+function leerCSV(file) {
   return new Promise((resolve, reject) => {
-    const tryRead = (encoding) => {
+    const intentar = (encodings) => {
       const reader = new FileReader();
       reader.onload = e => {
         try {
-          const rows = parseTSV(e.target.result);
+          const text = e.target.result.replace(/^\uFEFF/, ''); // quitar BOM
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (!lines.length) { resolve([]); return; }
+
+          // Detectar separador: ; o ,
+          const sep = lines[0].includes(';') ? ';' : ',';
+          const headers = lines[0].split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
+          const rows = [];
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(sep);
+            const row = {};
+            headers.forEach((h, idx) => {
+              row[h] = (cols[idx] || '').trim().replace(/^"|"$/g, '');
+            });
+            rows.push(row);
+          }
           resolve(rows);
         } catch(err) { reject(err); }
       };
       reader.onerror = () => {
-        if (encoding === 'UTF-16') tryRead('UTF-8');
-        else reject(new Error('No se pudo leer el archivo MOMENTOS'));
+        const resto = encodings.slice(1);
+        if (resto.length) intentar(resto);
+        else reject(new Error('No se pudo leer el archivo'));
       };
-      reader.readAsText(file, encoding);
+      reader.readAsText(file, encodings[0]);
     };
-    tryRead('UTF-16');
+    intentar(['UTF-8', 'UTF-16', 'ISO-8859-1']);
   });
 }
 
-function parseTSV(content) {
-  // Quitar BOM
-  const cleaned = content.replace(/^\uFEFF/, '');
-  const lines = cleaned.split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split('\t').map(h => h.trim());
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const cols = lines[i].split('\t');
-    const row = {};
-    headers.forEach((h, idx) => { row[h] = (cols[idx] || '').trim(); });
-    rows.push(row);
-  }
-  return rows;
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// LEER ARCHIVO .XLSX
-// ══════════════════════════════════════════════════════════════════════════════
-function readXlsxFile(file) {
+function leerXLSX(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
       try {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type: 'array', cellDates: true });
-        // Buscar hoja correcta
-        let sheetName = wb.SheetNames[0];
-        for (const name of wb.SheetNames) {
-          const lower = name.toLowerCase();
-          if (lower.includes('reporte') || lower.includes('cat') || lower.includes('subcat')) {
-            sheetName = name;
-            break;
-          }
-        }
-        const ws = wb.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        resolve(rows);
-      } catch(err) { reject(new Error('Error leyendo el archivo SGI: ' + err.message)); }
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(ws, { defval: '' }));
+      } catch(err) { reject(err); }
     };
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo SGI'));
+    reader.onerror = () => reject(new Error('No se pudo leer el Excel'));
     reader.readAsArrayBuffer(file);
   });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CALCULAR MINUTOS PROGRAMADOS
+// UTILIDADES
 // ══════════════════════════════════════════════════════════════════════════════
+function norm(v) { return (v || '').toString().trim().toUpperCase(); }
+
+function detectarColumna(rows, nombreBuscado) {
+  if (!rows.length) return null;
+  const nb = nombreBuscado.toUpperCase().replace(/\s+/g,'');
+  return Object.keys(rows[0]).find(k => k.trim().toUpperCase().replace(/\s+/g,'') === nb) || null;
+}
+
 function timeToMin(t) {
   if (!t) return 0;
-  const s = String(t).trim().replace(/[^0-9:]/g, '');
-  const parts = s.split(':');
-  if (parts.length < 2) return 0;
-  return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+  const s = String(t).trim().replace(/[^0-9:]/g,'');
+  const p = s.split(':');
+  return (parseInt(p[0])||0)*60 + (parseInt(p[1])||0);
 }
 
 function calcProgMin(row) {
-  let min = 0;
-  const h1 = row['HORA INICIO'] || '', f1 = row['HORA FIN'] || '';
-  const h2 = row['HORA INICIO2'] || '', f2 = row['HORA FIN2'] || '';
-  if (h1 && f1) { const d = timeToMin(f1) - timeToMin(h1); if (d > 0) min += d; }
-  if (h2 && f2 && h2 !== '0:00' && f2 !== '0:00') { const d = timeToMin(f2) - timeToMin(h2); if (d > 0) min += d; }
-  return min;
+  let m = 0;
+  const h1=row['HORA INICIO']||'', f1=row['HORA FIN']||'';
+  const h2=row['HORA INICIO2']||'', f2=row['HORA FIN2']||'';
+  const d1 = timeToMin(f1) - timeToMin(h1);
+  const d2 = timeToMin(f2) - timeToMin(h2);
+  if (d1 > 0) m += d1;
+  if (h2 && f2 && h2 !== '0:00:00' && f2 !== '0:00:00' && d2 > 0) m += d2;
+  return m;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PARSEAR FECHA/HORA DEL SGI
-// ══════════════════════════════════════════════════════════════════════════════
 function parseDateTime(val) {
   if (!val && val !== 0) return null;
-  // Ya es Date (SheetJS con cellDates:true)
   if (val instanceof Date && !isNaN(val)) return val;
   const s = String(val).trim();
   if (!s) return null;
-  // "DD/MM/YYYY HH:MM:SS" o "DD/MM/YYYY HH:MM"
+  // DD/MM/YYYY HH:MM:SS
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +(m[6]||0));
-  // "YYYY-MM-DD HH:MM:SS"
+  if (m) return new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5],+(m[6]||0));
+  // YYYY-MM-DD HH:MM:SS
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2})(?::(\d{2}))?/);
-  if (m) return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +(m[6]||0));
-  // Número serial de Excel (días desde 1900)
-  if (!isNaN(s) && s.includes('.')) {
-    const d = XLSX.SSF.parse_date_code(parseFloat(s));
-    if (d) return new Date(d.y, d.m-1, d.d, d.H, d.M, d.S);
-  }
+  if (m) return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0));
   const d = new Date(s);
   return isNaN(d) ? null : d;
 }
@@ -513,178 +469,132 @@ function fmtTime(d) {
 // PROCESO PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
 async function procesar() {
-  document.getElementById('error-box').style.display = 'none';
+  ocultarError();
   show('sec-loading'); hide('sec-upload'); paso(2);
-  setMsg('Leyendo archivo de visitas programadas…');
 
   try {
-    // ── 1. Leer MOMENTOS ──────────────────────────────────────────────────────
-    const momentosRows = await readTxtFile(gFiles.momentos);
-    if (!momentosRows.length) throw new Error('El archivo MOMENTOS está vacío o no tiene el formato correcto.');
+    const supervisor = norm(document.getElementById('sel-jefe').value);
 
-    setMsg(`${momentosRows.length} filas leídas de MOMENTOS…`);
-    await delay(200);
+    // ── 1. Leer SGI (Lo Programado) ──────────────────────────────────────────
+    setMsg('Leyendo Reporte SGI…');
+    const sgiRows = await leerArchivo(gFiles.sgi);
+    if (!sgiRows.length) throw new Error('El Reporte SGI está vacío.');
 
-    // ── 2. Filtrar MOMENTOS por NOMBRE JEFE (si la columna existe) ───────────
-    const supervisor = (document.getElementById('select-supervisor').value || '').trim().toUpperCase();
-    let filtradas = momentosRows;
-    if (supervisor) {
-      // Intentar filtrar por NOMBRE JEFE en MOMENTOS
-      const colJefeMom = Object.keys(momentosRows[0] || {}).find(k =>
-        k.trim().toUpperCase() === 'NOMBRE JEFE'
-      );
-      if (colJefeMom) {
-        filtradas = momentosRows.filter(r =>
-          (r[colJefeMom] || '').toUpperCase().trim() === supervisor
-        );
-      }
-      // Si no hay columna en MOMENTOS o no filtra nada, usar todos (el filtro real viene del SGI)
-      if (!filtradas.length) filtradas = momentosRows;
-    }
+    // Filtrar por jefe
+    const colJefe = detectarColumna(sgiRows, 'NOMBRE JEFE');
+    if (!colJefe) throw new Error('No se encontró columna NOMBRE JEFE en el Reporte SGI.');
 
-    setMsg(`${filtradas.length} visitas programadas${supervisor ? ' para ' + supervisor : ''}. Leyendo SGI…`);
+    const programadas = sgiRows.filter(r => norm(r[colJefe]) === supervisor);
+    if (!programadas.length) throw new Error(`No se encontraron visitas para "${supervisor}" en el SGI.`);
+
+    setMsg(`${programadas.length} visitas programadas para ${supervisor}…`);
     await delay(300);
 
-    // ── 3. Leer SGI ───────────────────────────────────────────────────────────
-    const sgiRows = await readXlsxFile(gFiles.sgi);
-    if (!sgiRows.length) throw new Error('El archivo SGI está vacío o no tiene el formato esperado.');
-
-    setMsg(`${sgiRows.length} registros SGI leídos. Filtrando por jefe…`);
-    await delay(200);
-
-    // Filtrar SGI por jefe seleccionado usando la columna detectada
-    const colJefe = gFiles.colJefeSGI;
-    const sgiDelJefe = (supervisor && colJefe)
-      ? sgiRows.filter(r => (r[colJefe] || '').toString().trim().toUpperCase() === supervisor)
-      : sgiRows;
-
-    if (!sgiDelJefe.length) {
-      throw new Error(`No se encontraron registros SGI para el jefe "${supervisor}".`);
-    }
+    // ── 2. Leer MOMENTOS (Lo Ejecutado) ──────────────────────────────────────
+    setMsg('Leyendo MOMENTOS (ejecutado)…');
+    const momentosRows = await leerArchivo(gFiles.momentos);
+    if (!momentosRows.length) throw new Error('El archivo MOMENTOS está vacío.');
 
     // Filtrar INGRESO Y SALIDA DE PDV
-    const sgiPDV = sgiDelJefe.filter(r => {
-      const sub = (r['NOMBRE SUBACTIVIDAD'] || r['SUBACTIVIDAD'] || '').toUpperCase();
+    const ejecutados = momentosRows.filter(r => {
+      const sub = norm(r['NOMBRE SUBACTIVIDAD'] || r['SUBACTIVIDAD'] || '');
       return sub.includes('INGRESO') && sub.includes('SALIDA');
     });
+    if (!ejecutados.length) throw new Error('No se encontraron registros "INGRESO Y SALIDA DE PDV" en MOMENTOS.');
 
-    if (!sgiPDV.length) {
-      throw new Error('No se encontraron registros "INGRESO Y SALIDA DE PDV" para este jefe en el SGI.');
-    }
+    setMsg(`${ejecutados.length} registros ejecutados encontrados. Cruzando datos…`);
+    await delay(300);
 
-    setMsg(`${sgiPDV.length} registros de entrada/salida encontrados. Calculando duraciones…`);
-    await delay(200);
-
-    // ── 4. Construir mapa SGI: "ASESOR_ID|PDV_ID" → mejor registro ────────────
-    const sgiMap = {};
-    sgiPDV.forEach(r => {
+    // ── 3. Mapa de ejecutados: ASESOR_ID|PDV_ID → mejor registro ─────────────
+    const ejecMap = {};
+    ejecutados.forEach(r => {
       const aid = String(r['ASESOR ID'] || r['ASESOR_ID'] || '').trim();
       const pid = String(r['PUNTO VENTA ID'] || r['PUNTO_VENTA_ID'] || '').trim();
       if (!aid || !pid) return;
       const ini = parseDateTime(r['FECHA INICIO'] || r['FECHA_INICIO']);
-      const fin = parseDateTime(r['FECHA FIN'] || r['FECHA_FIN']);
+      const fin = parseDateTime(r['FECHA FIN']    || r['FECHA_FIN']);
       if (!ini || !fin) return;
       const dur = (fin - ini) / 60000;
       if (dur < 0) return;
       const key = `${aid}|${pid}`;
-      if (!sgiMap[key] || dur > sgiMap[key].dur) {
-        sgiMap[key] = { dur, iniStr: fmtTime(ini), finStr: fmtTime(fin), nombre: r['NOMBRE ASESOR'] || '' };
+      if (!ejecMap[key] || dur > ejecMap[key].dur) {
+        ejecMap[key] = { dur, iniStr: fmtTime(ini), finStr: fmtTime(fin) };
       }
     });
 
-    setMsg('Cruzando datos y calculando estados…');
-    await delay(300);
-
-    // ── 5. Cruzar MOMENTOS ↔ SGI ──────────────────────────────────────────────
-    const detalle = filtradas.map(r => {
+    // ── 4. Cruzar programadas ↔ ejecutadas ───────────────────────────────────
+    const detalle = programadas.map(r => {
       const asesorId = String(r['ASESOR ID'] || r['CEDULA'] || '').trim();
       const pdvId    = String(r['PUNTO VENTA ID'] || '').trim();
-      const nombre   = (r['USUARIO'] || r['NOMBRE'] || '').trim();
+      const nombre   = (r['USUARIO'] || r['NOMBRE ASESOR'] || '').trim();
       const pdvNom   = (r['NOMBRE PV'] || '').trim();
       const minProg  = calcProgMin(r);
+      const key      = `${asesorId}|${pdvId}`;
+      const ej       = ejecMap[key];
 
-      const key = `${asesorId}|${pdvId}`;
-      const sgi = sgiMap[key];
-
-      let estado, durReal = null, iniReal = '—', finReal = '—', dif = '—', difVal = null;
-
-      if (sgi) {
-        durReal = Math.round(sgi.dur);
-        iniReal = sgi.iniStr;
-        finReal = sgi.finStr;
+      let estado, durReal=null, iniReal='—', finReal='—', dif='—', difVal=null;
+      if (ej) {
+        durReal = Math.round(ej.dur);
+        iniReal = ej.iniStr;
+        finReal = ej.finStr;
         difVal  = durReal - minProg;
         dif     = (difVal >= 0 ? '+' : '') + difVal + 'm';
         estado  = durReal >= minProg ? 'ok' : 'warning';
       } else {
         estado = 'fail';
       }
-
       return { asesorId, nombre, pdvId, pdvNom, minProg, durReal, iniReal, finReal, dif, difVal, estado };
     });
 
-    // ── 6. Resumen por asesor ─────────────────────────────────────────────────
+    // ── 5. Resumen por asesor ─────────────────────────────────────────────────
     const asesorMap = {};
     detalle.forEach(d => {
-      if (!asesorMap[d.asesorId]) {
-        asesorMap[d.asesorId] = { nombre: d.nombre, prog: 0, ok: 0, warn: 0, fail: 0 };
-      }
+      if (!asesorMap[d.asesorId]) asesorMap[d.asesorId] = { nombre: d.nombre, prog:0, ok:0, warn:0, fail:0 };
       const a = asesorMap[d.asesorId];
       a.prog++;
-      if (d.estado === 'ok')      a.ok++;
-      else if (d.estado === 'warning') a.warn++;
-      else                        a.fail++;
+      if (d.estado==='ok') a.ok++; else if (d.estado==='warning') a.warn++; else a.fail++;
     });
     const resumen = Object.values(asesorMap);
 
-    // ── 7. Actualizar UI ──────────────────────────────────────────────────────
-    gResult = { detalle, resumen, supervisor, archivo: gFiles.momentos.name };
+    // ── 6. Render ─────────────────────────────────────────────────────────────
+    gResult = { detalle, resumen, supervisor };
 
     document.getElementById('kpi-total').textContent = detalle.length;
-    document.getElementById('kpi-ok').textContent    = detalle.filter(d => d.estado==='ok').length;
-    document.getElementById('kpi-warn').textContent  = detalle.filter(d => d.estado==='warning').length;
-    document.getElementById('kpi-fail').textContent  = detalle.filter(d => d.estado==='fail').length;
-
-    const fecha = gFiles.momentos.name.replace(/\.[^.]+$/, '');
+    document.getElementById('kpi-ok').textContent    = detalle.filter(d=>d.estado==='ok').length;
+    document.getElementById('kpi-warn').textContent  = detalle.filter(d=>d.estado==='warning').length;
+    document.getElementById('kpi-fail').textContent  = detalle.filter(d=>d.estado==='fail').length;
     document.getElementById('reporte-info').textContent =
-      `📋 ${supervisor || 'TODOS LOS ASESORES'} · ${detalle.length} visitas programadas · ${fecha}`;
+      `📋 ${supervisor}  ·  ${detalle.length} visitas programadas  ·  ${gFiles.sgi.name}`;
 
     renderResumen(resumen);
     renderDetalle(detalle);
+    hide('sec-loading'); show('sec-reporte'); paso(3);
 
-    hide('sec-loading');
-    show('sec-reporte');
-    paso(3);
-
-  } catch (err) {
-    hide('sec-loading');
-    show('sec-upload');
-    paso(1);
-    const eb = document.getElementById('error-box');
-    document.getElementById('error-msg').textContent = err.message;
-    eb.style.display = 'block';
+  } catch(err) {
+    hide('sec-loading'); show('sec-upload'); paso(1);
+    mostrarError(err.message);
     console.error(err);
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// RENDER TABLAS
+// RENDER
 // ══════════════════════════════════════════════════════════════════════════════
 function renderResumen(resumen) {
   const tb = document.getElementById('tbody-resumen');
   tb.innerHTML = '';
-  const sorted = [...resumen].sort((a, b) => {
-    const order = e => e.ok === e.prog ? 2 : e.fail === e.prog ? 0 : 1;
-    return order(a) - order(b);
-  });
-  sorted.forEach(r => {
-    const pct   = r.prog > 0 ? Math.round((r.ok / r.prog) * 100) : 0;
-    const est   = r.ok === r.prog ? 'ok' : r.fail === r.prog ? 'fail' : 'warning';
-    const badge = est === 'ok'
+  [...resumen].sort((a,b) => {
+    const ord = e => e.ok===e.prog?2 : e.fail===e.prog?0:1;
+    return ord(a)-ord(b);
+  }).forEach(r => {
+    const pct = r.prog>0 ? Math.round(r.ok/r.prog*100) : 0;
+    const est = r.ok===r.prog?'ok' : r.fail===r.prog?'fail':'warning';
+    const badge = est==='ok'
       ? '<span class="badge ok">✔ Cumplió</span>'
-      : est === 'fail'
+      : est==='fail'
       ? '<span class="badge fail">✘ No Reportó</span>'
       : '<span class="badge warning">⚠ Incompleto</span>';
-    const clr = pct >= 100 ? 'var(--verde)' : pct > 0 ? 'var(--naranja)' : 'var(--rojo)';
+    const clr = pct>=100?'var(--verde)':pct>0?'var(--naranja)':'var(--rojo)';
     const bar = `<div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%;background:${clr}"></div></div> ${pct}%`;
     tb.innerHTML += `<tr data-est="${est}">
       <td><span class="asesor-name">${r.nombre}</span></td>
@@ -692,9 +602,7 @@ function renderResumen(resumen) {
       <td style="text-align:center;color:var(--verde);font-weight:700">${r.ok}</td>
       <td style="text-align:center;color:var(--naranja);font-weight:700">${r.warn}</td>
       <td style="text-align:center;color:var(--rojo);font-weight:700">${r.fail}</td>
-      <td>${bar}</td>
-      <td>${badge}</td>
-    </tr>`;
+      <td>${bar}</td><td>${badge}</td></tr>`;
   });
 }
 
@@ -702,90 +610,84 @@ function renderDetalle(detalle) {
   const tb = document.getElementById('tbody-detalle');
   tb.innerHTML = '';
   detalle.forEach(d => {
-    const badge = d.estado === 'ok'
+    const badge = d.estado==='ok'
       ? '<span class="badge ok">✔ Cumplió</span>'
-      : d.estado === 'warning'
-      ? '<span class="badge warning">⚠ T. Insuf.</span>'
+      : d.estado==='warning'
+      ? '<span class="badge warning">⚠ T.Insuf.</span>'
       : '<span class="badge fail">✘ No Reportó</span>';
-    const difCls = d.dif === '—' ? 'diff-na' : (d.difVal||0) >= 0 ? 'diff-pos' : 'diff-neg';
-    const realStr = d.durReal !== null ? d.durReal + 'm' : '—';
+    const dc = d.dif==='—'?'diff-na':(d.difVal||0)>=0?'diff-pos':'diff-neg';
+    const rs = d.durReal!==null ? d.durReal+'m' : '—';
     tb.innerHTML += `<tr data-est="${d.estado}">
       <td><span class="asesor-name">${d.nombre}</span></td>
       <td><span class="pdv-name">${d.pdvNom}</span></td>
       <td class="time-cell" style="text-align:center">${d.minProg}m</td>
       <td class="time-cell" style="text-align:center">${d.iniReal}</td>
       <td class="time-cell" style="text-align:center">${d.finReal}</td>
-      <td class="time-cell" style="text-align:center">${realStr}</td>
-      <td class="time-cell ${difCls}" style="text-align:center">${d.dif}</td>
-      <td>${badge}</td>
-    </tr>`;
+      <td class="time-cell" style="text-align:center">${rs}</td>
+      <td class="time-cell ${dc}" style="text-align:center">${d.dif}</td>
+      <td>${badge}</td></tr>`;
   });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DESCARGAR EXCEL
+// EXCEL DOWNLOAD
 // ══════════════════════════════════════════════════════════════════════════════
 function descargar() {
   if (!gResult) return;
   const wb = XLSX.utils.book_new();
-
-  const resH = ['Asesor','PDV Prog.','Cumplió','T. Insuficiente','No Reportó','% Cumplimiento','Estado'];
-  const resR = gResult.resumen.map(r => {
-    const pct = r.prog > 0 ? Math.round(r.ok/r.prog*100) : 0;
-    const est = r.ok===r.prog ? 'CUMPLIÓ' : r.fail===r.prog ? 'NO REPORTÓ' : 'INCOMPLETO';
-    return [r.nombre, r.prog, r.ok, r.warn, r.fail, pct+'%', est];
+  const rH = ['Asesor','Prog.','Cumplió','T.Insuf.','No Reportó','%Cumplimiento','Estado'];
+  const rR = gResult.resumen.map(r => {
+    const pct = r.prog>0?Math.round(r.ok/r.prog*100):0;
+    return [r.nombre, r.prog, r.ok, r.warn, r.fail, pct+'%',
+      r.ok===r.prog?'CUMPLIÓ':r.fail===r.prog?'NO REPORTÓ':'INCOMPLETO'];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([resH, ...resR]), 'RESUMEN ASESORES');
-
-  const detH = ['Asesor','Punto de Venta','Min. Prog.','Inicio Real','Fin Real','Min. Real','Diferencia','Estado'];
-  const detR = gResult.detalle.map(d => [
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([rH,...rR]), 'RESUMEN');
+  const dH = ['Asesor','Punto de Venta','Min.Prog.','Inicio Real','Fin Real','Min.Real','Diferencia','Estado'];
+  const dR = gResult.detalle.map(d => [
     d.nombre, d.pdvNom, d.minProg, d.iniReal, d.finReal,
-    d.durReal !== null ? d.durReal : '',
-    d.dif,
-    d.estado === 'ok' ? 'CUMPLIÓ' : d.estado === 'warning' ? 'TIEMPO INSUFICIENTE' : 'NO REPORTÓ'
+    d.durReal!==null?d.durReal:'', d.dif,
+    d.estado==='ok'?'CUMPLIÓ':d.estado==='warning'?'TIEMPO INSUFICIENTE':'NO REPORTÓ'
   ]);
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([detH, ...detR]), 'DETALLE VISITAS');
-
-  const hoy = new Date().toLocaleDateString('es-CO').replace(/\//g,'-');
-  XLSX.writeFile(wb, `Validacion_Visitas_${hoy}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([dH,...dR]), 'DETALLE');
+  XLSX.writeFile(wb, `Visitas_${gResult.supervisor.split(' ')[0]}_${new Date().toLocaleDateString('es-CO').replace(/\//g,'-')}.xlsx`);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FILTROS Y NAVEGACIÓN
 // ══════════════════════════════════════════════════════════════════════════════
-function filtrarTabla(id, q) {
+function filtrar(id, q) {
   q = q.toLowerCase();
   document.querySelectorAll(`#${id} tbody tr`).forEach(tr => {
     tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
 
-function filtrarPorEstado(id, val) {
+function filtrarEstado(id, val) {
   document.querySelectorAll(`#${id} tbody tr`).forEach(tr => {
-    if (!val) { tr.style.display = ''; return; }
-    tr.style.display = tr.dataset.est === val ? '' : 'none';
+    if (!val) { tr.style.display=''; return; }
+    tr.style.display = tr.dataset.est===val ? '' : 'none';
   });
 }
 
 function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach((t,i) =>
-    t.classList.toggle('active', (i===0 && tab==='resumen') || (i===1 && tab==='detalle')));
-  document.getElementById('tab-resumen').style.display = tab === 'resumen' ? '' : 'none';
-  document.getElementById('tab-detalle').style.display = tab === 'detalle' ? '' : 'none';
+    t.classList.toggle('active', (i===0&&tab==='resumen')||(i===1&&tab==='detalle')));
+  document.getElementById('tab-resumen').style.display = tab==='resumen'?'':'none';
+  document.getElementById('tab-detalle').style.display = tab==='detalle'?'':'none';
 }
 
 function reiniciar() {
-  gFiles = { momentos: null, sgi: null, colJefeSGI: null };
+  gFiles = { sgi:null, momentos:null };
   gResult = null;
-  ['momentos','sgi'].forEach(t => {
-    document.getElementById('box-' + t).classList.remove('loaded');
-    document.getElementById('fn-' + t).textContent = '';
-    document.getElementById('file-' + t).value = '';
+  ['sgi','momentos'].forEach(t => {
+    document.getElementById('box-'+t).classList.remove('loaded');
+    document.getElementById('fn-'+t).textContent = '';
+    document.getElementById('file-'+t).value = '';
   });
-  document.getElementById('btn-procesar').disabled = true;
-  document.getElementById('error-box').style.display = 'none';
   document.getElementById('jefe-row').style.display = 'none';
-  document.getElementById('select-supervisor').innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
+  document.getElementById('sel-jefe').innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
+  document.getElementById('btn-procesar').disabled = true;
+  ocultarError();
   hide('sec-reporte'); show('sec-upload'); paso(1);
 }
 
@@ -794,16 +696,18 @@ function reiniciar() {
 // ══════════════════════════════════════════════════════════════════════════════
 function show(id) { document.getElementById(id).classList.add('visible'); }
 function hide(id) { document.getElementById(id).classList.remove('visible'); }
-function paso(n) {
+function paso(n)  {
   [1,2,3].forEach(i => {
     const el = document.getElementById('s'+i);
     el.classList.remove('active','done');
-    if (i < n)  el.classList.add('done');
-    if (i === n) el.classList.add('active');
+    if (i<n)  el.classList.add('done');
+    if (i===n) el.classList.add('active');
   });
 }
-function setMsg(msg) { document.getElementById('loading-msg').textContent = msg; }
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+function setMsg(m)     { document.getElementById('loading-msg').textContent = m; }
+function delay(ms)     { return new Promise(r => setTimeout(r, ms)); }
+function mostrarError(m) { const e=document.getElementById('error-box'); document.getElementById('error-msg').textContent=m; e.style.display='block'; }
+function ocultarError()  { document.getElementById('error-box').style.display='none'; }
 </script>
 </body>
 </html>
