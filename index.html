@@ -198,7 +198,7 @@
           <option value="">— Elige un jefe para continuar —</option>
         </select>
         <div style="font-size:.75rem;color:var(--suave);margin-top:4px;">
-          💡 Estos jefes se leyeron directamente de tu archivo MOMENTOS
+          💡 Lista leída automáticamente del archivo MOMENTOS
         </div>
       </div>
 
@@ -317,52 +317,73 @@ function fileLoaded(tipo, input) {
   document.getElementById('fn-' + tipo).textContent = '✔ ' + input.files[0].name;
   document.getElementById('error-box').style.display = 'none';
 
-  // Al cargar el Excel SGI → leer NOMBRE JEFE y llenar el dropdown
-  if (tipo === 'sgi') {
-    cargarJefesDesdeExcel(gFiles.sgi);
+  // Al cargar MOMENTOS → leer NOMBRE JEFE y llenar el dropdown
+  if (tipo === 'momentos') {
+    cargarJefesDesdeArchivo(gFiles.momentos);
   }
 
   revisarHabilitarBoton();
 }
 
-function cargarJefesDesdeExcel(file) {
+function cargarJefesDesdeArchivo(file) {
   const sel = document.getElementById('select-supervisor');
-  sel.innerHTML = '<option value="">⏳ Leyendo jefes del Excel…</option>';
+  sel.innerHTML = '<option value="">⏳ Leyendo jefes del archivo…</option>';
   document.getElementById('jefe-row').style.display = 'block';
+  document.getElementById('btn-procesar').disabled = true;
 
-  readXlsxFile(file).then(rows => {
-    // Buscar columna NOMBRE JEFE (puede tener variantes)
-    const primeraFila = rows[0] || {};
-    const colJefe = Object.keys(primeraFila).find(k =>
-      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEFE') ||
-      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEF')
-    );
+  // Intentar varias codificaciones para UTF-16
+  const intentarLectura = (encodings) => {
+    const enc = encodings[0];
+    const resto = encodings.slice(1);
+    const reader = new FileReader();
+    reader.onload = e => {
+      const rows = parseTSV(e.target.result);
+      // Verificar que tenga la columna NOMBRE JEFE con datos reales
+      const colJefe = rows.length > 0
+        ? Object.keys(rows[0]).find(k => k.trim().toUpperCase() === 'NOMBRE JEFE')
+        : null;
 
-    if (!colJefe) {
-      sel.innerHTML = '<option value="">⚠ No se encontró columna NOMBRE JEFE en el Excel</option>';
-      return;
-    }
+      if (!colJefe && resto.length > 0) {
+        intentarLectura(resto); // probar siguiente codificación
+        return;
+      }
 
-    const conteo = {};
-    rows.forEach(r => {
-      const j = (r[colJefe] || '').toString().trim().toUpperCase();
-      if (j) conteo[j] = (conteo[j] || 0) + 1;
-    });
+      if (!colJefe) {
+        sel.innerHTML = '<option value="">⚠ No se encontró columna NOMBRE JEFE en el archivo</option>';
+        return;
+      }
 
-    const jefes = Object.keys(conteo).sort();
-    sel.innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
-    jefes.forEach(j => {
-      const op = document.createElement('option');
-      op.value = j;
-      op.textContent = j + '  (' + conteo[j] + ' registros)';
-      sel.appendChild(op);
-    });
+      const conteo = {};
+      rows.forEach(r => {
+        const j = (r[colJefe] || '').toString().trim().toUpperCase();
+        if (j) conteo[j] = (conteo[j] || 0) + 1;
+      });
 
-    document.getElementById('jefe-row').style.display = 'block';
-    revisarHabilitarBoton();
-  }).catch(err => {
-    sel.innerHTML = '<option value="">❌ Error leyendo Excel: ' + err.message + '</option>';
-  });
+      const jefes = Object.keys(conteo).sort();
+      if (jefes.length === 0) {
+        sel.innerHTML = '<option value="">⚠ No se encontraron jefes en el archivo</option>';
+        return;
+      }
+
+      sel.innerHTML = '<option value="">— Elige un jefe para continuar —</option>';
+      jefes.forEach(j => {
+        const op = document.createElement('option');
+        op.value = j;
+        op.textContent = j + '  (' + conteo[j] + ' visitas)';
+        sel.appendChild(op);
+      });
+
+      document.getElementById('jefe-row').style.display = 'block';
+      revisarHabilitarBoton();
+    };
+    reader.onerror = () => {
+      if (resto.length > 0) intentarLectura(resto);
+      else sel.innerHTML = '<option value="">❌ No se pudo leer el archivo</option>';
+    };
+    reader.readAsText(file, enc);
+  };
+
+  intentarLectura(['UTF-16', 'UTF-16LE', 'UTF-16BE', 'UTF-8']);
 }
 
 function onJefeChange() {
@@ -528,23 +549,8 @@ async function procesar() {
     setMsg(`${sgiRows.length} registros SGI leídos. Filtrando por jefe y actividad…`);
     await delay(200);
 
-    // Detectar columna NOMBRE JEFE en SGI
-    const primeraFila = sgiRows[0] || {};
-    const colJefe = Object.keys(primeraFila).find(k =>
-      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEFE') ||
-      k.toUpperCase().replace(/\s+/g,'').includes('NOMBREJEF')
-    );
-
-    // Filtrar por jefe seleccionado (si la columna existe en SGI)
-    let sgiDelJefe = sgiRows;
-    if (supervisor && colJefe) {
-      sgiDelJefe = sgiRows.filter(r =>
-        (r[colJefe] || '').toString().trim().toUpperCase() === supervisor
-      );
-    }
-
-    // Filtrar INGRESO Y SALIDA DE PDV
-    const sgiPDV = sgiDelJefe.filter(r => {
+    // Filtrar INGRESO Y SALIDA DE PDV (el SGI no tiene NOMBRE JEFE, el filtro por jefe ya se hizo en MOMENTOS)
+    const sgiPDV = sgiRows.filter(r => {
       const sub = (r['NOMBRE SUBACTIVIDAD'] || r['SUBACTIVIDAD'] || '').toUpperCase();
       return sub.includes('INGRESO') && sub.includes('SALIDA');
     });
